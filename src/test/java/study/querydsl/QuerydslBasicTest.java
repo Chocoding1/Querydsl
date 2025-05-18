@@ -116,6 +116,7 @@ public class QuerydslBasicTest {
                 .selectFrom(member)
                 .fetchFirst();
 
+        // 카운트 쿼리
         Long count = queryFactory
                 .select(member.count())
                 .from(member)
@@ -162,7 +163,7 @@ public class QuerydslBasicTest {
     }
 
     /**
-     * 전체 조회 수
+     * 전체 조회 수 (카운트 쿼리 날리면 된다)
      */
     @Test
     public void paging2() {
