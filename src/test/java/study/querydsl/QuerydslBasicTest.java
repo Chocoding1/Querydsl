@@ -3,6 +3,8 @@ package study.querydsl;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -306,5 +308,46 @@ public class QuerydslBasicTest {
         for (Tuple tuple : result) {
             System.out.println("t=" + tuple);
         }
+    }
+
+    @PersistenceUnit
+    EntityManagerFactory emf;
+    /**
+     * fetch join 적용 안 할 때
+     */
+    @Test
+    public void fetchJoinNo() {
+        // 페치 조인 테스트할 때, 영속성 컨텍스트에 남아있는 데이터들을 안 지워주면 결과를 제대로 보기 어렵기 때문에 영속성 컨텍스트 초기화한다.
+        em.flush();
+        em.clear();
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());// 조회한 회원과 연관되어있는 team이 현재 같이 로딩이 되었는지, 즉 같이 조회가 되었는지 확인하는 메서드(EntityManagerFactory 필요)
+
+        assertThat(loaded).as("페치 조인 미적용").isFalse();
+    }
+
+    /**
+     * fetch join 적용
+     */
+    @Test
+    public void fetchJoinUse() {
+        // 페치 조인 테스트할 때, 영속성 컨텍스트에 남아있는 데이터들을 안 지워주면 결과를 제대로 보기 어렵기 때문에 영속성 컨텍스트 초기화한다.
+        em.flush();
+        em.clear();
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .join(member.team, team).fetchJoin()
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());// 조회한 회원과 연관되어있는 team이 현재 같이 로딩이 되었는지, 즉 같이 조회가 되었는지 확인하는 메서드(EntityManagerFactory 필요)
+
+        assertThat(loaded).as("페치 조인 미적용").isTrue();
     }
 }
