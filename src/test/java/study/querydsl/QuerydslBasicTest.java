@@ -1,6 +1,7 @@
 package study.querydsl;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -12,10 +13,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.entity.Member;
 
+import study.querydsl.entity.QMember;
 import study.querydsl.entity.Team;
 
 import java.util.List;
 
+import static com.querydsl.jpa.JPAExpressions.*;
 import static org.assertj.core.api.Assertions.*;
 import static study.querydsl.entity.QMember.*;
 import static study.querydsl.entity.QTeam.*;
@@ -349,5 +352,92 @@ public class QuerydslBasicTest {
         boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());// 조회한 회원과 연관되어있는 team이 현재 같이 로딩이 되었는지, 즉 같이 조회가 되었는지 확인하는 메서드(EntityManagerFactory 필요)
 
         assertThat(loaded).as("페치 조인 미적용").isTrue();
+    }
+
+    /**
+     * 서브 쿼리 (com.querydsl.jpa.JPAExpressions 사용)
+     * 나이가 가장 많은 회원 조회 (eq 사용)
+     */
+    @Test
+    public void subQuery() {
+
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.eq(
+                        select(memberSub.age.max()) // 서브 쿼리와 메인 쿼리의 member가 겹치면 안 된다. 따라서 새로운 QMember 객체를 만들어줘야 한다.
+                                .from(memberSub)
+
+                ))
+                .fetch();
+
+        assertThat(result).extracting("age")
+                .containsExactly(40);
+    }
+
+    /**
+     * 서브 쿼리 (com.querydsl.jpa.JPAExpressions 사용)
+     * 나이가 평균 이상인 회원 조회 (goe 사용)
+     */
+    @Test
+    public void subQueryGoe() {
+
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.goe(
+                        select(memberSub.age.avg()) // 서브 쿼리와 메인 쿼리의 member가 겹치면 안 된다. 따라서 새로운 QMember 객체를 만들어줘야 한다.
+                                .from(memberSub)
+
+                ))
+                .fetch();
+
+        assertThat(result).extracting("age")
+                .containsExactly(30, 40);
+    }
+
+    /**
+     * 서브 쿼리 (com.querydsl.jpa.JPAExpressions 사용)
+     * 나이가 10살보다 많은 회원 조회(in 사용)
+     */
+    @Test
+    public void subQueryIn() {
+
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.in(
+                        select(memberSub.age) // 서브 쿼리와 메인 쿼리의 member가 겹치면 안 된다. 따라서 새로운 QMember 객체를 만들어줘야 한다.
+                                .from(memberSub)
+                                .where(memberSub.age.gt(10))
+
+                ))
+                .fetch();
+
+        assertThat(result).extracting("age")
+                .containsExactly(20, 30, 40);
+    }
+
+    /**
+     * select절에 서브 쿼리
+     */
+    @Test
+    public void selectSubQuery() {
+
+        QMember memberSub = new QMember("memberSub");
+
+        List<Tuple> result = queryFactory
+                .select(member.username,
+                        select(memberSub.age.avg())
+                                .from(memberSub))
+                .from(member)
+                .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
     }
 }
