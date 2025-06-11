@@ -522,6 +522,9 @@ public class QuerydslBasicTest {
         }
     }
 
+    /**
+     * Projection
+     */
     @Test
     public void simpleProjection() {
         List<String> result = queryFactory
@@ -717,7 +720,7 @@ public class QuerydslBasicTest {
      * 단, 동적 쿼리를 위해서 null 체크는 반드시 해줘야 한다.
      *
      * 장점
-     * 1. 조건 쿼리 메서드를 다른 쿼리에서도 재사용할 수 있다.
+     * 1. 조건 쿼리 메서드를 다른 쿼리에서도 재사용할 수 있다. (큰 장점)
      * 2. 여러 메서드를 조합해서 어떤 특정 상태를 체크하는 조건 메서드를 생성할 수 있다. (pdf 참고)
      *    ex) 특정 상품이 할인 구매 가능한지 여부를 체크하는 메서드(isSellable)는 특정 상품의 재고가 있는지(isRemain)와 특정 상품에 할인을 적용할 수 있는지(isDiscount)를 합치면 된다.
      *     => where(isSellable(isRemain(...), isDiscount(...)))
