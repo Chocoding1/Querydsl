@@ -33,7 +33,7 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom{
     public List<MemberTeamDto> search(MemberSearchCondition condition) {
         return queryFactory
                 .select(new QMemberTeamDto(
-                        member.id.as("memberId"),
+                        member.id.as("memberId"), // 생성자 selection이라 as 빼도 됨
                         member.username,
                         member.age,
                         team.id.as("teamId"),
