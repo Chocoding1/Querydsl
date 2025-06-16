@@ -20,6 +20,7 @@ import static study.querydsl.entity.QTeam.team;
 
 /**
  * 클래스명은 Spring Data interface 이름 뒤에 Impl을 붙인 형태로 작성해야 한다.(의무)
+ * 그래야 스프링 데이터 JPA가 인식해서 스프링 빈으로 등록한다.
  */
 public class MemberRepositoryImpl implements MemberRepositoryCustom{
 
